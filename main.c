@@ -6,42 +6,37 @@
 
 int main(){
 
-    
-
+    // Create Pipe
     int p1[2];  //pipe p0 -> p1
     int p2[2];  //pipe p0 -> p2
     if(pipe(p1) == -1 || pipe(p2) == -1){
-        printf("create pipe error");
+        printf("create pipe ERROR !!!\n");
         return 2;
     }
 
+
+    //Create Child Processes
     int pid1, pid2, pid3; 
     
-    //child 1
-    pid1 = fork();
+    pid1 = fork();                                  //Child 1
+    if(pid1 != 0)               pid2 = fork();      //Child 2
+    if(pid1 != 0 && pid2 != 0)  pid3 = fork();      //Child 3
     
-    //child 2
-    if(pid1 != 0){
-        pid2 = fork();
-    }
-    
-    //child 3
-    if(pid1 != 0 && pid2 != 0){
-        pid3 = fork();
-    }
-
+    //test create processes
     if(pid1 == -1 || pid2 == -1 || pid3 == -1){
         printf("fork error \n");
         return 1;
     }
 
-    if(pid1 == 0){  //Child 1
+
+    //CHILD 01
+    if(pid1 == 0){
         
         close(p2[0]);
         close(p1[1]);
         close(p2[1]);
 
-        //Recebendo Numero de P0
+        //Read numbers from P0 
         int number1;
         if(read(p1[0], &number1, sizeof(number1)) == -1){
             printf("read number ERROR !!!\n");
@@ -49,34 +44,30 @@ int main(){
         }
         printf("this number (x) is %d \n", number1);
         
-        //Recebendo string de P0
-        int tamanho =0;
+        //Read String from P0
+        int size = 0; //size da string recebida
         char str[200];
-        if(read(p1[0], &tamanho, sizeof(int)) == -1){
+        if(read(p1[0], &size, sizeof(int)) == -1){
             printf("read str ERROR !!!\n");
             return 2;
         }
-        if(read(p1[0], str , sizeof(char)*tamanho ) == -1){
+        if(read(p1[0], str , sizeof(char)*size ) == -1){
             printf("read str ERROR !!!\n");
             return 2;
         }
+
         printf("String received in Child 1:%s\n", str);
-
-
-
-
-
-
         close(p1[0]);
 
 
 
-
-    }else if(pid2 == 0){    //child 2
+    //CHILD 02
+    }else if(pid2 == 0){
         close(p1[0]);
         close(p1[1]);
         close(p2[1]);
         
+        //Read numbers from P0 
         int number1;
         if(read(p2[0], &number1, sizeof(number1)) == -1){
             printf("read number ERROR !!!\n");
@@ -84,34 +75,32 @@ int main(){
         }
         printf("this number (y) is %d \n", number1);
 
-        //Recebendo string de P0
-        int tamanho =0;
+        //Read String from P0
+        int size =0;
         char str[200];
-        if(read(p2[0], &tamanho, sizeof(int)) == -1){
+        if(read(p2[0], &size, sizeof(int)) == -1){
             printf("read str ERROR !!!\n");
             return 2;
         }
-        if(read(p2[0], str , sizeof(char)*tamanho ) == -1){
+        if(read(p2[0], str , sizeof(char)*size ) == -1){
             printf("read str ERROR !!!\n");
             return 2;
         }
+
         printf("String received in Child 2:%s\n", str);
-
-
-
         close(p2[0]);
 
 
-    }else if(pid3 == 0){    //Child 3
+    //CHILD 03
+    }else if(pid3 == 0){
         close(p2[0]);
         close(p1[1]);
         close(p2[1]);
         close(p1[0]);
 
 
-
-
-    }else{                      //parent
+    //Parent Process
+    }else{          
         close(p1[0]);
         close(p2[0]);
         
@@ -154,12 +143,12 @@ int main(){
         str[strlen(str) - 1] = x[0];
         //printf("%s\n", str);
 
-        int tamanho = strlen(str) +1;
-        if(write(p1[1], &tamanho, sizeof(int)) == -1){
+        int size = strlen(str) +1;
+        if(write(p1[1], &size, sizeof(int)) == -1){
             printf("write str for p1 ERROR!!! \n");
             return 2;
         }
-        if(write(p1[1], str, sizeof(char) *tamanho ) == -1){
+        if(write(p1[1], str, sizeof(char) *size ) == -1){
             printf("write str for p1 ERROR!!! \n");
             return 2;
         }
@@ -168,11 +157,11 @@ int main(){
         str[strlen(str) - 1] = y[0];
         //printf("%s\n", str);
 
-        if(write(p2[1], &tamanho, sizeof(int)) == -1){
+        if(write(p2[1], &size, sizeof(int)) == -1){
             printf("write str for p1 ERROR!!! \n");
             return 2;
         }
-        if(write(p2[1], str, sizeof(char) *tamanho ) == -1){
+        if(write(p2[1], str, sizeof(char) *size ) == -1){
             printf("write str for p1 ERROR!!! \n");
             return 2;
         }
